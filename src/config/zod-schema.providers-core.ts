@@ -770,3 +770,60 @@ export const MSTeamsConfigSchema = z
         'channels.msteams.dmPolicy="open" requires channels.msteams.allowFrom to include "*"',
     });
   });
+
+export const WeComAccountSchemaBase = z
+  .object({
+    name: z.string().optional(),
+    capabilities: z.array(z.string()).optional(),
+    markdown: MarkdownConfigSchema,
+    enabled: z.boolean().optional(),
+    commands: ProviderCommandsSchema,
+    configWrites: z.boolean().optional(),
+    corpId: z.string().optional(),
+    secret: z.string().optional(),
+    agentId: z.number().int().positive().optional(),
+    token: z.string().optional(),
+    encodingAESKey: z.string().optional(),
+    webhookUrl: z.string().optional(),
+    webhookPath: z.string().optional(),
+    port: z.number().int().positive().optional(),
+    dmPolicy: DmPolicySchema.optional().default("pairing"),
+    allowFrom: z.array(z.union([z.string(), z.number()])).optional(),
+    groupAllowFrom: z.array(z.union([z.string(), z.number()])).optional(),
+    groupPolicy: GroupPolicySchema.optional().default("allowlist"),
+    historyLimit: z.number().int().min(0).optional(),
+    dmHistoryLimit: z.number().int().min(0).optional(),
+    dms: z.record(z.string(), DmConfigSchema.optional()).optional(),
+    textChunkLimit: z.number().int().positive().optional(),
+    chunkMode: z.enum(["length", "newline"]).optional(),
+    blockStreaming: z.boolean().optional(),
+    mediaMaxMb: z.number().positive().optional(),
+    timeoutSeconds: z.number().int().positive().optional(),
+    proxy: z.string().optional(),
+    replyToMode: ReplyToModeSchema.optional(),
+    heartbeat: ChannelHeartbeatVisibilitySchema,
+  })
+  .strict();
+
+export const WeComAccountSchema = WeComAccountSchemaBase.superRefine((value, ctx) => {
+  requireOpenAllowFrom({
+    policy: value.dmPolicy,
+    allowFrom: value.allowFrom,
+    ctx,
+    path: ["allowFrom"],
+    message: 'channels.wecom.dmPolicy="open" requires channels.wecom.allowFrom to include "*"',
+  });
+});
+
+export const WeComConfigSchema = WeComAccountSchemaBase.extend({
+  accounts: z.record(z.string(), WeComAccountSchema.optional()).optional(),
+  defaultAccountId: z.string().optional(),
+}).superRefine((value, ctx) => {
+  requireOpenAllowFrom({
+    policy: value.dmPolicy,
+    allowFrom: value.allowFrom,
+    ctx,
+    path: ["allowFrom"],
+    message: 'channels.wecom.dmPolicy="open" requires channels.wecom.allowFrom to include "*"',
+  });
+});

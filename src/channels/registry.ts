@@ -12,6 +12,7 @@ export const CHAT_CHANNEL_ORDER = [
   "slack",
   "signal",
   "imessage",
+  "wecom",
 ] as const;
 
 export type ChatChannelId = (typeof CHAT_CHANNEL_ORDER)[number];
@@ -98,12 +99,24 @@ const CHAT_CHANNEL_META: Record<ChatChannelId, ChannelMeta> = {
     blurb: "this is still a work in progress.",
     systemImage: "message.fill",
   },
+  wecom: {
+    id: "wecom",
+    label: "WeCom",
+    selectionLabel: "WeCom (Enterprise WeChat)",
+    detailLabel: "WeCom",
+    docsPath: "/channels/wecom",
+    docsLabel: "wecom",
+    blurb: "enterprise WeChat intelligent robot with webhook support.",
+    systemImage: "building.2",
+  },
 };
 
 export const CHAT_CHANNEL_ALIASES: Record<string, ChatChannelId> = {
   imsg: "imessage",
   "google-chat": "googlechat",
   gchat: "googlechat",
+  wx: "wecom",
+  "weixin": "wecom",
 };
 
 const normalizeChannelKey = (raw?: string | null): string | undefined => {

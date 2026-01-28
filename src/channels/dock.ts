@@ -21,6 +21,8 @@ import {
   resolveSlackGroupToolPolicy,
   resolveTelegramGroupRequireMention,
   resolveTelegramGroupToolPolicy,
+  resolveWeComGroupRequireMention,
+  resolveWeComGroupToolPolicy,
   resolveWhatsAppGroupRequireMention,
   resolveWhatsAppGroupToolPolicy,
 } from "./plugins/group-mentions.js";
@@ -367,6 +369,50 @@ const DOCKS: Record<ChatChannelId, ChannelDock> = {
           hasRepliedRef,
         };
       },
+    },
+  },
+  wecom: {
+    id: "wecom",
+    capabilities: {
+      chatTypes: ["direct", "group"],
+      media: true,
+      blockStreaming: true,
+    },
+    outbound: { textChunkLimit: 4096 },
+    config: {
+      resolveAllowFrom: ({ cfg, accountId }) => {
+        const channel = cfg.channels?.wecom as
+          | {
+              accounts?: Record<string, { allowFrom?: string[] }>;
+            }
+          | undefined;
+        const normalized = normalizeAccountId(accountId);
+        const account =
+          channel?.accounts?.[normalized] ??
+          channel?.accounts?.[
+            Object.keys(channel?.accounts ?? {}).find(
+              (key) => key.toLowerCase() === normalized.toLowerCase(),
+            ) ?? ""
+          ];
+        return account?.allowFrom ?? [];
+      },
+      formatAllowFrom: ({ allowFrom }) =>
+        allowFrom
+          .map((entry) => String(entry).trim())
+          .filter(Boolean)
+          .map((entry) => entry.replace(/^wecom:/i, "").toLowerCase()),
+    },
+    groups: {
+      resolveRequireMention: resolveWeComGroupRequireMention,
+      resolveToolPolicy: resolveWeComGroupToolPolicy,
+    },
+    threading: {
+      resolveReplyToMode: ({ cfg }) => cfg.channels?.wecom?.replyToMode ?? "off",
+      buildToolContext: ({ context, hasRepliedRef }) => ({
+        currentChannelId: context.To?.trim() || undefined,
+        currentThreadTs: context.ReplyToId,
+        hasRepliedRef,
+      }),
     },
   },
 };
